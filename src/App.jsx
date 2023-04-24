@@ -3,177 +3,150 @@ import '@pixi/graphics-extras';
 import testdata from "./testData/testsmall.json"
 import wardrobe from "./testData/wardrobe.json"
 
-// const App = () => {
-//   //Создание канваса
-//   const app = new PIXI.Application({ background: testdata[0].col, width: 720+2, height: 500+3});
-//   //Добавление канваса
-//   document.body.appendChild(app.view);
-//   document.body.style.margin = "20px"
-
-//   const container = new PIXI.Container();
-//   app.stage.addChild(container);
-
-//   console.log(wardrobe)
-
-//   //узнаем, насколько пикселей разделяем 
-//   const heightContainer = Math.floor(500/testdata[0].un_height)
-
-//   const widthContainer = Math.floor(720/testdata[0].un_width-2)
-
-//   //создаем графику
-//   const graphics = new PIXI.Graphics();
-
-//   //создаем текст с надеждой, что его можно добавить на наш прямоугольник
-//   graphics.lineStyle(2, "#000000", 1);
-//   graphics.beginFill("#FF774B");
-//   graphics.drawRect(2, 2, widthContainer, heightContainer);
-//   graphics.endFill();
-
-//   const graphics2 = new PIXI.Graphics();
-
-//   graphics2.lineStyle(2, "#000000", 1);
-//   graphics2.beginFill("94f89b");
-//   graphics2.drawRect(2, heightContainer+2, widthContainer, heightContainer);
-//   graphics2.endFill();
-
-//   // graphics.lineStyle(2, "#000000", 1);
-//   // graphics.beginFill("#FF774B");
-//   // graphics.drawRect(2, heightContainer*2+2, widthContainer, heightContainer);
-//   // graphics.endFill();
-
-//   // graphics.lineStyle(2, "#000000", 1);
-//   // graphics.beginFill("#FF774B");
-//   // graphics.drawRect(2, heightContainer*3+2, widthContainer, heightContainer);
-//   // graphics.endFill();
-
-
-
-//   app.stage.addChild(graphics);
-//   // app.stage.addChild(graphics2);
-
-//   return (
-//     <>
-
-//     </>
-//   )
-// }
-
-// export default App;
-
 const App = () => {
-  const app = new PIXI.Application({ background: '#1099bb' });
+  //Создание канваса
+  const app = new PIXI.Application({ background: "#FFFFFF", width: 2000, height: 2000 });
+  //Добавление канваса
   document.body.appendChild(app.view);
   document.body.style.margin = "20px"
 
-  // create a texture from an image path
-  const texture = PIXI.Texture.from('https://pixijs.io/examples/examples/assets/bunny.png');
+  //Создаем контейнер
+  const container = new PIXI.Container();
 
-  // Scale mode for pixelation
-  texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
-
-  for (let i = 0; i < 1; i++) {
-    if(i===0){
-      createBunny2(
-        Math.floor(Math.random() * app.screen.width),
-        Math.floor(Math.random() * app.screen.height),
-      );
+  testdata.map((element) => {
+    //Определяем, базовый ли это контейнер
+    if (element.set1 && element.set2) {
+      //создаем графику для контейнера
+      const graphics = new PIXI.Graphics();
+      //Обводка контейнера
+      graphics.lineStyle(1, "#000000");
+      //Определяем цвет и закрашиваем контейнер
+      const color = element.col.slice(2)
+      graphics.beginFill(color);
+      //Определяем ширину базового контейнера
+      const baseWidth = element.un_width * element.set1 * element.set2
+      element.baseWidth = baseWidth
+      //Определяем высоту базового контейнера
+      const baseHeight = element.un_height * element.set1
+      element.baseHeight = baseHeight
+      //Определяем количество элементов внутри контейнера
+      const heightChildElements = Math.floor(baseHeight / element.inner_un)
+      element.heightChildElements = heightChildElements
+      //Отрисовываем данный контейнер
+      graphics.drawRect(1, 0, baseWidth, baseHeight);
+      container.addChild(graphics)
     }
-    createBunny(
-      Math.floor(Math.random() * app.screen.width),
-      Math.floor(Math.random() * app.screen.height),
-    );
-  }
+    //работа с остальными(дочерними) элементами
+    else {
+      let containerWidth = 0
+      //создаем графику для контейнера
+      const graphics = new PIXI.Graphics();
+      //Обводка контейнера
+      graphics.lineStyle(1, "#000000");
+      //Определяем цвет и закрашиваем контейнер
+      const color = element.col.slice(2)
+      graphics.beginFill(color);
+      //Возвращаем id элемента по клику
+      graphics.interactive = true
+      graphics.cursor = "pointer"
+      graphics.on("click",()=>{console.log(element.un_id)})
 
-  function createBunny(x, y) {
-    const container = new PIXI.Container();
-    const graphics = new PIXI.Graphics();
-    const basicText = new PIXI.Text('Это текстddddddddddddddddd',{fontSize: 12});
-    basicText.x = 50;
-    basicText.y = 50;
-    basicText.anchor.set(0.5)
+      //Определяем родительский элемент
+      const parentElement = testdata.find(possibileParent => possibileParent.un_id === element.un_parent_id)
+      //Определяем ширину контейнера
+      if (parentElement.div_v !== 0) {
+        containerWidth = Math.floor((parentElement.baseWidth * element.un_width) / parentElement.div_v)
+      }
+      //Определяем высоту контейнера
+      const containerHeight = parentElement.heightChildElements * element.un_height
+      //Определяем координату по оси x для элемента и для потомков
+      let coordX = containerWidth * element.pos_x
+      if (coordX === 0) {
+        coordX = 1
+      }
+      element.coordX = coordX
+      //В каком порядке располагаем элементы
+      if (parentElement.fu === 0) {
+        //Обратный порядок элементов относительно родительского контейнера
 
-    //Делаем графику интерактивной
-    graphics.interactive = true;
-
-    graphics.cursor = "pointer"
-    //Линия вокруг геометрии
-    graphics.lineStyle(2, "#000000", 1);
-    //Заливка
-    graphics.beginFill("#FF774B");
-    graphics.on('pointerdown', onDragStart, graphics)
-    graphics.x = x
-    graphics.y = y
-    graphics.pivot.x = 50
-    graphics.pivot.y = 50
-    graphics.drawRect(0, 0, 100, 100);
-    graphics.endFill();
-
-    graphics.addChild(basicText)
-    container.addChild(graphics)
-    // container.addChild(graphics, basicText)
-    app.stage.addChild(container)
-  }
-
-  function createBunny2(x, y) {
-    const container = new PIXI.Container();
-    const graphics = new PIXI.Graphics();
-    const basicText = new PIXI.Text('Это текст',{fontSize: 12});
-    basicText.x = 150;
-    basicText.y = 25;
-    basicText.anchor.set(0.5)
-    //Делаем графику интерактивной
-    graphics.interactive = true;
-
-    graphics.cursor = "pointer"
-    //Линия вокруг геометрии
-    graphics.lineStyle(2, "#000000", 1);
-    //Заливка
-    graphics.beginFill("#FF774B");
-    graphics.on('pointerdown', onDragStart, graphics)
-    graphics.x = x
-    graphics.y = y
-    graphics.pivot.x = 150
-    graphics.pivot.y = 25
-    graphics.drawRect(0, 0, 300, 50);
-    graphics.endFill();
-
-    graphics.addChild(basicText)
-    container.addChild(graphics)
-    // container.addChild(graphics, basicText)
-    app.stage.addChild(container)
-  }
-
-  let dragTarget = null;
-
-  app.stage.interactive = true;
-  app.stage.hitArea = app.screen;
-  app.stage.on('pointerup', onDragEnd);
-  app.stage.on('pointerupoutside', onDragEnd);
-
-  function onDragMove(event) {
-    if (dragTarget) {
-      // console.log(dragTarget)
-      dragTarget.parent.toLocal(event.global, null, dragTarget.position);
+        let coordY = 0
+        //Определяем координату по оси y
+        if (parentElement.coordY) {
+          coordY = parentElement.coordY
+        } else {
+          coordY = parentElement.baseHeight - ((element.pos_y + 1) * containerHeight)
+        }
+        element.coordY = coordY
+        //Отрисовываем данный контейнер
+        graphics.drawRect(coordX, coordY, containerWidth, containerHeight);
+        container.addChild(graphics)
+        //Если есть дети, то имя располагаем в отдельном контейнере
+        if (element.has_childs) {
+          //Высота контейнера
+          const innerContainerHeight = 30
+          //создаем графику для контейнера
+          const innerGraphics = new PIXI.Graphics();
+          //Обводка контейнера
+          innerGraphics.lineStyle(1, "#000000");
+          element.coordY = element.coordY + 30
+          //Для потомков создаем ширину и высоту элемента
+          const baseHeight = containerHeight - innerContainerHeight
+          element.baseHeight = baseHeight
+          const baseWidth = containerWidth
+          element.baseWidth = baseWidth
+          //Определяем высоту элементов внутри контейнера
+          const heightChildElements = Math.floor(baseHeight / element.inner_un)
+          element.heightChildElements = heightChildElements
+          //Создаем текст и центрируем его
+          const text = new PIXI.Text(element.ustr_name, { fontSize: 12 })
+          text.x = Math.floor(containerWidth / 2)
+          text.y = coordY + Math.floor(innerContainerHeight / 2)
+          text.anchor.set(0.5)
+          //Отрисовываем данный контейнер
+          innerGraphics.drawRect(coordX, coordY, containerWidth, innerContainerHeight);
+          //Добавляем текст в контейнер
+          innerGraphics.addChild(text)
+          container.addChild(innerGraphics)
+        } else {
+          //Если детей нет
+          //Создаем текст и центрируем его
+          const text = new PIXI.Text(element.ustr_name, { fontSize: 12 })
+          text.x = coordX + Math.floor(containerWidth / 2)
+          text.y = coordY + Math.floor(containerHeight / 2)
+          text.anchor.set(0.5)
+          text.angle = 90
+          graphics.addChild(text)
+        }
+      } else {
+        //Прямой порядок
+        //Определяем координату по оси y
+        const coordY = (element.pos_y * containerHeight)
+        //Определяем координату по оси x
+        const coordX = 1
+        //Отрисовываем данный контейнер
+        graphics.drawRect(coordX, coordY, containerWidth, containerHeight);
+        container.addChild(graphics)
+      }
     }
-  }
+  })
 
-  function onDragStart() {
-    // this.alpha = 0.5;
-    dragTarget = this;
-    app.stage.on('pointermove', onDragMove);
-  }
+  app.stage.addChild(container);
 
-  function onDragEnd() {
-    if (dragTarget) {
-      app.stage.off('pointermove', onDragMove);
-      dragTarget.alpha = 1;
-      dragTarget = null;
-    }
-  }
+  //узнаем, насколько пикселей разделяем 
+
+  // //создаем графику
+  // const graphics = new PIXI.Graphics();
+
+  // //создаем текст с надеждой, что его можно добавить на наш прямоугольник
+  // graphics.lineStyle(2, "#000000", 1);
+  // graphics.beginFill("#FF774B");
+  // graphics.drawRect(2, 2, widthContainer, heightContainer);
+  // graphics.endFill();
+
+  // app.stage.addChild(graphics);
 
   return (
     <>
-
     </>
   )
 }
