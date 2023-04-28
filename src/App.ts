@@ -2,7 +2,6 @@ import * as PIXI from 'pixi.js';
 import '@pixi/graphics-extras';
 import testdata from "./testData/testsmall.json"
 import wardrobe from "./testData/wardrobe.json"
-import ElementWardrobe from './WardrobeElement';
 
 
 const App = () => {
